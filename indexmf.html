@@ -491,6 +491,27 @@
             margin: 10px 0;
             border-radius: 0 5px 5px 0;
         }
+        
+        /* Error Section */
+        .error-section {
+            text-align: center;
+            padding: 50px 0;
+        }
+        
+        .error-section h2 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .error-section p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 <body>
@@ -505,11 +526,11 @@
                 
                 <nav>
                     <ul>
-                        <li><a href="#">Home</a></li>
-                        <li><a href="#">Movies</a></li>
-                        <li><a href="#">TV Shows</a></li>
-                        <li><a href="#">New</a></li>
-                        <li><a href="#">My List</a></li>
+                        <li><a href="#" class="nav-link active">Home</a></li>
+                        <li><a href="#" class="nav-link">Movies</a></li>
+                        <li><a href="#" class="nav-link">TV Shows</a></li>
+                        <li><a href="#" class="nav-link">New</a></li>
+                        <li><a href="#" class="nav-link">My List</a></li>
                     </ul>
                 </nav>
                 
@@ -520,6 +541,51 @@
             </div>
         </div>
     </header>
+
+    <!-- Error Section -->
+    <div class="container">
+        <div class="error-section">
+            <h2>Fixing Vercel 404 Error</h2>
+            <p>The 404 error on your Vercel deployment is typically caused by routing issues. Single Page Applications (SPAs) like this need proper configuration to handle direct URL access.</p>
+            
+            <div class="setup-instructions">
+                <h2>How to Fix the 404 Error on Vercel</h2>
+                
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Create a vercel.json file</h3>
+                    <p>Add this configuration file to your project root:</p>
+                    <div class="code-block">
+                        {
+                            "routes": [
+                                {
+                                    "src": "/(.*)",
+                                    "dest": "/index.html",
+                                    "status": 200
+                                }
+                            ]
+                        }
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Deploy Again</h3>
+                    <p>Push the vercel.json file to your repository and redeploy</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Alternative: Use Hash Routing</h3>
+                    <p>Modify your links to use hash-based routing:</p>
+                    <div class="code-block">
+                        &lt;a href="#home"&gt;Home&lt;/a&gt;
+                        &lt;a href="#movies"&gt;Movies&lt;/a&gt;
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -534,66 +600,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Setup Instructions -->
-    <div class="container">
-        <div class="setup-instructions">
-            <h2>How to Host on Vercel with GitHub</h2>
-            
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3>Create a GitHub Account</h3>
-                <p>If you don't have one, sign up at <a href="https://github.com" style="color: var(--primary);">github.com</a></p>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3>Create a New Repository</h3>
-                <p>Create a new repository for your movie site</p>
-                <div class="code-block">
-                    Repository name: movieflix-site<br>
-                    Public repository<br>
-                    Initialize with a README
-                </div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3>Upload Your Files</h3>
-                <p>Upload your HTML, CSS, and JavaScript files to the repository</p>
-                <div class="code-block">
-                    git init<br>
-                    git add .<br>
-                    git commit -m "Initial commit"<br>
-                    git branch -M main<br>
-                    git remote add origin https://github.com/your-username/movieflix-site.git<br>
-                    git push -u origin main
-                </div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">4</div>
-                <h3>Sign up for Vercel</h3>
-                <p>Go to <a href="https://vercel.com" style="color: var(--primary);">vercel.com</a> and sign up with your GitHub account</p>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">5</div>
-                <h3>Import Your Project</h3>
-                <p>Click "Import Project" and select your movieflix-site repository</p>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">6</div>
-                <h3>Deploy</h3>
-                <p>Click "Deploy" and wait for your site to go live</p>
-            </div>
-            
-            <div class="note">
-                <strong>Note:</strong> For automatic updates from external sources, you would need to set up a serverless function or use a backend service to fetch and update content regularly.
-            </div>
-        </div>
-    </div>
 
     <!-- Categories -->
     <div class="container">
@@ -756,6 +762,7 @@
         const searchBtn = document.getElementById('searchBtn');
         const loader = document.getElementById('loader');
         const notification = document.getElementById('notification');
+        const navLinks = document.querySelectorAll('.nav-link');
 
         // Display movies
         function displayMovies(moviesArray) {
@@ -837,10 +844,39 @@
             }
         });
 
+        // Navigation active state
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
             simulateLoading();
             showNotification('Welcome to MovieFlix! This is a demo site.');
+            
+            // Handle routing for Vercel
+            if (window.location.hash) {
+                const page = window.location.hash.substring(1);
+                const navLink = document.querySelector(`.nav-link[href="#${page}"]`);
+                if (navLink) {
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    navLink.classList.add('active');
+                }
+            }
+        });
+
+        // Hash change listener for SPA routing
+        window.addEventListener('hashchange', function() {
+            const page = window.location.hash.substring(1);
+            const navLink = document.querySelector(`.nav-link[href="#${page}"]`);
+            if (navLink) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                navLink.classList.add('active');
+            }
         });
     </script>
 </body>

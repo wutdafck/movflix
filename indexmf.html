@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieFlix - Stream Movies & TV Shows</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #e50914;
+            --dark: #0f0f1a;
+            --light-dark: #1a1a2e;
+            --text: #ffffff;
+            --text-secondary: #aaaaaa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--dark);
+            color: var(--text);
+            line-height: 1.6;
+            padding-top: 70px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 15px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 25px;
+        }
+        
+        nav ul li a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 16px;
+        }
+        
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 5px 15px;
+            transition: background 0.3s;
+        }
+        
+        .search-box:focus-within {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            padding: 8px;
+            width: 200px;
+            outline: none;
+        }
+        
+        .search-box button {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .search-box button:hover {
+            color: var(--primary);
+        }
+        
+        /* Hero Section */
+        .hero {
+            height: 70vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), 
+                        url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80') no-repeat center center/cover;
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+            border-radius: 10px;
+        }
+        
+        .hero-content {
+            max-width: 600px;
+            padding: 30px;
+        }
+        
+        .hero-content h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .hero-content p {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            color: var(--text-secondary);
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--text);
+            padding: 12px 30px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .btn:hover {
+            background: #f40612;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Categories Section */
+        .section-title {
+            margin: 40px 0 20px;
+            font-size: 1.8rem;
+            color: var(--text);
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+        }
+        
+        .categories {
+            display: flex;
+            overflow-x: auto;
+            padding: 15px 0;
+            gap: 15px;
+            scrollbar-width: thin;
+        }
+        
+        .categories::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .categories::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 8px;
+        }
+        
+        .category {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        
+        .category:hover, .category.active {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        /* Movies Grid */
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .movie-card {
+            background: var(--light-dark);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .movie-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .movie-poster {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .movie-card:hover .movie-poster {
+            transform: scale(1.05);
+        }
+        
+        .movie-info {
+            padding: 15px;
+        }
+        
+        .movie-title {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .movie-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .rating {
+            color: #ffc107;
+        }
+        
+        /* Video Player Section */
+        .video-section {
+            margin: 50px 0;
+            text-align: center;
+        }
+        
+        .video-container {
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .video-placeholder {
+            padding: 60px;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+        }
+        
+        .video-placeholder i {
+            font-size: 64px;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .video-placeholder p {
+            margin: 10px 0;
+            color: var(--text-secondary);
+        }
+        
+        /* Footer */
+        footer {
+            background: #070711;
+            padding: 50px 0 20px;
+            margin-top: 70px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+        
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .footer-column ul {
+            list-style: none;
+        }
+        
+        .footer-column ul li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-column ul li a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-column ul li a:hover {
+            color: var(--text);
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .social-icons a {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .social-icons a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            nav ul {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            nav ul li {
+                margin: 5px 10px;
+            }
+            
+            .search-box {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .hero-content h1 {
+                font-size: 2.2rem;
+            }
+            
+            .movies-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .movie-poster {
+                height: 220px;
+            }
+        }
+        
+        /* Loading animation */
+        .loader {
+            display: none;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: var(--primary);
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(100vw);
+            transition: transform 0.3s ease-out;
+            z-index: 2000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        /* Setup Instructions */
+        .setup-instructions {
+            background: var(--light-dark);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 40px 0;
+        }
+        
+        .setup-instructions h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+        
+        .step {
+            margin-bottom: 20px;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .step-number {
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: var(--primary);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .code-block {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+        
+        .note {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 0 5px 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">
+                    <i class="fas fa-play-circle"></i>
+                    MovieFlix
+                </a>
+                
+                <nav>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">Movies</a></li>
+                        <li><a href="#">TV Shows</a></li>
+                        <li><a href="#">New</a></li>
+                        <li><a href="#">My List</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="search-box">
+                    <input type="text" placeholder="Search movies..." id="searchInput">
+                    <button id="searchBtn"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>John Wick: Chapter 4</h1>
+                <p>John Wick uncovers a path to defeating The High Table. But before he can earn his freedom, Wick must face off against a new enemy with powerful alliances across the globe.</p>
+                <div>
+                    <a href="#" class="btn"><i class="fas fa-play"></i> Watch Now</a>
+                    <a href="#" class="btn btn-secondary"><i class="fas fa-plus"></i> My List</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Setup Instructions -->
+    <div class="container">
+        <div class="setup-instructions">
+            <h2>How to Host on Vercel with GitHub</h2>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Create a GitHub Account</h3>
+                <p>If you don't have one, sign up at <a href="https://github.com" style="color: var(--primary);">github.com</a></p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Create a New Repository</h3>
+                <p>Create a new repository for your movie site</p>
+                <div class="code-block">
+                    Repository name: movieflix-site<br>
+                    Public repository<br>
+                    Initialize with a README
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Upload Your Files</h3>
+                <p>Upload your HTML, CSS, and JavaScript files to the repository</p>
+                <div class="code-block">
+                    git init<br>
+                    git add .<br>
+                    git commit -m "Initial commit"<br>
+                    git branch -M main<br>
+                    git remote add origin https://github.com/your-username/movieflix-site.git<br>
+                    git push -u origin main
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Sign up for Vercel</h3>
+                <p>Go to <a href="https://vercel.com" style="color: var(--primary);">vercel.com</a> and sign up with your GitHub account</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">5</div>
+                <h3>Import Your Project</h3>
+                <p>Click "Import Project" and select your movieflix-site repository</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">6</div>
+                <h3>Deploy</h3>
+                <p>Click "Deploy" and wait for your site to go live</p>
+            </div>
+            
+            <div class="note">
+                <strong>Note:</strong> For automatic updates from external sources, you would need to set up a serverless function or use a backend service to fetch and update content regularly.
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="container">
+        <h2 class="section-title">Browse Categories</h2>
+        <div class="categories">
+            <div class="category active">All</div>
+            <div class="category">Action</div>
+            <div class="category">Adventure</div>
+            <div class="category">Comedy</div>
+            <div class="category">Drama</div>
+            <div class="category">Horror</div>
+            <div class="category">Sci-Fi</div>
+            <div class="category">Thriller</div>
+            <div class="category">Romance</div>
+            <div class="category">Animation</div>
+        </div>
+    </div>
+
+    <!-- Movies Grid -->
+    <div class="container">
+        <h2 class="section-title">Popular Now</h2>
+        <div class="movies-grid" id="moviesGrid">
+            <!-- Movie cards will be dynamically inserted here -->
+        </div>
+        <div class="loader" id="loader"></div>
+    </div>
+
+    <!-- Video Player Section -->
+    <div class="container">
+        <div class="video-section">
+            <h2 class="section-title">Featured Content</h2>
+            <div class="video-container">
+                <div class="video-placeholder">
+                    <i class="fas fa-play-circle"></i>
+                    <p>Video player would be embedded here</p>
+                    <p>For demonstration purposes only</p>
+                    <div style="margin-top: 20px;">
+                        <button class="btn"><i class="fas fa-play"></i> Play Movie</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>MovieFlix</h3>
+                    <p>Your ultimate streaming destination for movies and TV shows.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Navigation</h3>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">Movies</a></li>
+                        <li><a href="#">TV Shows</a></li>
+                        <li><a href="#">New Releases</a></li>
+                        <li><a href="#">My List</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Support</h3>
+                    <ul>
+                        <li><a href="#">Account</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Device Support</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Legal</h3>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Copyright Notice</a></li>
+                        <li><a href="#">Cookie Preferences</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2023 MovieFlix. This is a demo project for educational purposes only.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        This is a demo notification
+    </div>
+
+    <script>
+        // Movie data - In a real app, this would come from a backend
+        const movies = [
+            {
+                id: 1,
+                title: "The Dark Knight",
+                year: 2008,
+                rating: 9.0,
+                poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                category: "Action"
+            },
+            {
+                id: 2,
+                title: "Inception",
+                year: 2010,
+                rating: 8.8,
+                poster: "https://images.unsplash.com/photo-1590179068383-b9c69aacebd3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                category: "Sci-Fi"
+            },
+            {
+                id: 3,
+                title: "Interstellar",
+                year: 2014,
+                rating: 8.6,
+                poster: "https://images.unsplash.com/photo-1596727147705-61a532a659bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                category: "Sci-Fi"
+            },
+            {
+                id: 4,
+                title: "The Shawshank Redemption",
+                year: 1994,
+                rating: 9.3,
+                poster: "https://images.unsplash.com/photo-1458053688450-eef5d21d43b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                category: "Drama"
+            },
+            {
+                id: 5,
+                title: "Pulp Fiction",
+                year: 1994,
+                rating: 8.9,
+                poster: "https://images.unsplash.com/photo-1489599102910-59206b8ca314?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                category: "Thriller"
+            },
+            {
+                id: 6,
+                title: "The Godfather",
+                year: 1972,
+                rating: 9.2,
+                poster: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                category: "Drama"
+            }
+        ];
+
+        // DOM elements
+        const moviesGrid = document.getElementById('moviesGrid');
+        const categories = document.querySelectorAll('.category');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const loader = document.getElementById('loader');
+        const notification = document.getElementById('notification');
+
+        // Display movies
+        function displayMovies(moviesArray) {
+            moviesGrid.innerHTML = '';
+            
+            if (moviesArray.length === 0) {
+                moviesGrid.innerHTML = '<p class="no-results">No movies found. Try a different search.</p>';
+                return;
+            }
+            
+            moviesArray.forEach(movie => {
+                const movieCard = document.createElement('div');
+                movieCard.className = 'movie-card';
+                movieCard.innerHTML = `
+                    <img src="${movie.poster}" alt="${movie.title}" class="movie-poster">
+                    <div class="movie-info">
+                        <h3 class="movie-title">${movie.title}</h3>
+                        <div class="movie-meta">
+                            <span>${movie.year}</span>
+                            <span class="rating">${movie.rating}/10</span>
+                        </div>
+                    </div>
+                `;
+                moviesGrid.appendChild(movieCard);
+            });
+        }
+
+        // Show notification
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Simulate loading
+        function simulateLoading() {
+            loader.style.display = 'block';
+            
+            setTimeout(() => {
+                loader.style.display = 'none';
+                displayMovies(movies);
+            }, 1500);
+        }
+
+        // Category filtering
+        categories.forEach(category => {
+            category.addEventListener('click', function() {
+                document.querySelector('.category.active').classList.remove('active');
+                this.classList.add('active');
+                
+                const categoryName = this.textContent;
+                
+                if (categoryName === 'All') {
+                    displayMovies(movies);
+                } else {
+                    const filteredMovies = movies.filter(movie => movie.category === categoryName);
+                    displayMovies(filteredMovies);
+                }
+            });
+        });
+
+        // Search functionality
+        searchBtn.addEventListener('click', function() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            
+            if (searchTerm) {
+                const filteredMovies = movies.filter(movie => 
+                    movie.title.toLowerCase().includes(searchTerm)
+                );
+                
+                displayMovies(filteredMovies);
+                
+                if (filteredMovies.length === 0) {
+                    showNotification('No movies found for your search.');
+                }
+            }
+        });
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            simulateLoading();
+            showNotification('Welcome to MovieFlix! This is a demo site.');
+        });
+    </script>
+</body>
+</html>

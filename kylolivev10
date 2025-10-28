@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KyloLive SportsTV - Live Sports Streaming</title>
+    <meta name="description" content="Watch live sports streams from around the world - Football, Basketball, Tennis, Cricket and more!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- HLS.js for better HLS stream support -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1920px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 3px solid #00d4ff;
+            margin-bottom: 30px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo::before {
+            content: '📡';
+            font-size: 1.2em;
+            filter: drop-shadow(0 0 10px #00d4ff);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            padding: 10px 20px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #00d4ff;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            background: rgba(0, 212, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .live-dot {
+            width: 12px;
+            height: 12px;
+            background: #00d4ff;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px #00d4ff;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        .sports-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding: 20px;
+            background: rgba(0, 212, 255, 0.05);
+            border-radius: 20px;
+        }
+
+        .sport-tab {
+            padding: 12px 24px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            border: 2px solid transparent;
+            font-weight: 500;
+        }
+
+        .sport-tab:hover, .sport-tab.active {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .section-title {
+            font-size: 2em;
+            margin-bottom: 25px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .match-card {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(0, 153, 204, 0.1) 100%);
+            border-radius: 20px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(0, 212, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .match-card:hover {
+            transform: scale(1.03);
+            border-color: #00d4ff;
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.3);
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .match-league {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .match-time {
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        .match-time.live {
+            color: #ff4444;
+            animation: pulse 2s infinite;
+        }
+
+        .teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .team-logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .team-name {
+            font-weight: bold;
+            text-align: center;
+            font-size: 1em;
+        }
+
+        .vs {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .match-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .stream-quality {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quality-badge {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .watch-button {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .watch-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 150px;
+            font-size: 1.3em;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(0, 212, 255, 0.3);
+            border-top: 4px solid #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(255, 68, 68, 0.1);
+            border: 2px solid rgba(255, 68, 68, 0.3);
+            color: #ff6666;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .video-player {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-container {
+            width: 95%;
+            height: 95%;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 3px solid #00d4ff;
+            box-shadow: 0 0 50px rgba(0, 212, 255, 0.5);
+        }
+
+        .close-button {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255, 68, 68, 0.9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .close-button:hover {
+            background: #ff4444;
+            transform: scale(1.1);
+        }
+
+        .api-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 212, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            z-index: 999;
+        }
+
+        .api-status.connected {
+            color: #4CAF50;
+            border-color: rgba(76, 175, 80, 0.3);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .api-status.error {
+            color: #ff6666;
+            background: rgba(255, 68, 68, 0.1);
+            border-color: rgba(255, 68, 68, 0.3);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            z-index: 1001;
+            font-weight: bold;
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .matches-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo {
+                font-size: 1.8em;
+            }
+            
+            .nav-menu {
+                gap: 10px;
+            }
+            
+            .nav-item {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">KyloLive SportsTV</div>
+            <nav class="nav-menu">
+                <div class="nav-item active" data-section="live" onclick="handleNavigation('live'); this.parentElement.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); this.classList.add('active');">🔴 Live Now</div>
+                <div class="nav-item" data-section="replays" onclick="handleNavigation('replays'); this.parentElement.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); this.classList.add('active');">🏀 NBA Replays</div>
+                <div class="nav-item" data-section="upcoming" onclick="handleNavigation('upcoming'); this.parentElement.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); this.classList.add('active');">📅 Scheduled</div>
+                <div class="nav-item" data-section="highlights" onclick="handleNavigation('highlights'); this.parentElement.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); this.classList.add('active');">⭐ Highlights</div>
+            </nav>
+        </header>
+
+        <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span id="liveIndicatorText">🌍 Live Sports Worldwide</span>
+        </div>
+
+        <div class="sports-tabs">
+            <div class="sport-tab active" data-sport="football">⚽ Football</div>
+            <div class="sport-tab" data-sport="basketball">🏀 Basketball</div>
+            <div class="sport-tab" data-sport="tennis">🎾 Tennis</div>
+            <div class="sport-tab" data-sport="cricket">🏏 Cricket</div>
+            <div class="sport-tab" data-sport="hockey">🏒 Hockey</div>
+            <div class="sport-tab" data-sport="baseball">⚾ Baseball</div>
+            <div class="sport-tab" data-sport="rugby">🏉 Rugby</div>
+        </div>
+
+        <div class="matches-section">
+            <h2 class="section-title" id="sectionTitle">
+                🔴 Live Matches
+                <span id="matchCount" style="font-size: 0.6em; opacity: 0.7;">(Loading...)</span>
+            </h2>
+            <div class="loading-spinner" id="loading">
+                <div class="spinner"></div>
+                <span>Loading live matches...</span>
+            </div>
+            <div class="matches-grid" id="matchesContainer"></div>
+            
+            <!-- NBA Replays Section (Hidden by default) -->
+            <div id="nbaReplaysSection" style="display: none;">
+                <div style="background: rgba(0, 212, 255, 0.1); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 2px solid rgba(0, 212, 255, 0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div>
+                            <h3 style="color: #00d4ff; margin-bottom: 5px;">🏀 NBA Full Game Replays</h3>
+                            <p style="font-size: 0.9em; opacity: 0.8;">Watch complete NBA games on demand - Spoiler free, HD quality</p>
+                        </div>
+                        <button class="watch-button" onclick="refreshNBAReplays()" style="white-space: nowrap;">🔄 Refresh</button>
+                    </div>
+                    
+                    <!-- Toggle between embedded and external view -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="watch-button" onclick="showEmbeddedReplays()" id="embeddedBtn" style="background: linear-gradient(45deg, #00d4ff, #0099cc);">
+                            📺 Embedded View
+                        </button>
+                        <button class="watch-button" onclick="window.open('https://watchreplay.net/', '_blank')" id="externalBtn" style="background: rgba(0, 212, 255, 0.2);">
+                            🔗 Open in New Tab
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Embedded iframe for NBA Replays -->
+                <div id="replaysIframeContainer" style="display: block; background: #000; border-radius: 15px; overflow: hidden; border: 3px solid #00d4ff; height: 800px;">
+                    <iframe 
+                        id="nbaReplaysIframe" 
+                        src="https://watchreplay.net/" 
+                        style="width: 100%; height: 100%; border: none;"
+                        allow="fullscreen"
+                        loading="lazy">
+                    </iframe>
+                </div>
+                
+                <!-- Alternative: Scraped content would go here -->
+                <div id="scrapedReplaysContainer" style="display: none;">
+                    <div class="matches-grid" id="nbaReplaysGrid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="video-player" id="videoPlayer">
+        <div class="video-container">
+            <button class="close-button" onclick="closePlayer()">✕ Close</button>
+            
+            <!-- Stream Source Selector -->
+            <div id="streamSelector" style="position: absolute; top: 80px; left: 20px; z-index: 20; background: rgba(0, 0, 0, 0.9); padding: 15px; border-radius: 12px; border: 2px solid #00d4ff; display: none; max-width: 300px;">
+                <div style="font-weight: bold; margin-bottom: 10px; color: #00d4ff; display: flex; justify-content: space-between; align-items: center;">
+                    <span>📡 Select Stream Source</span>
+                    <button onclick="toggleStreamSelector()" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 1.2em;">✕</button>
+                </div>
+                <div id="streamSourcesList" style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto;">
+                    <!-- Stream sources will be inserted here -->
+                </div>
+            </div>
+            
+            <!-- Toggle Stream Selector Button -->
+            <button id="toggleStreamBtn" onclick="toggleStreamSelector()" style="position: absolute; top: 80px; right: 25px; z-index: 15; background: rgba(0, 212, 255, 0.9); color: white; border: none; padding: 10px 15px; border-radius: 25px; cursor: pointer; font-weight: bold; display: none; transition: all 0.3s ease;">
+                📡 Change Source
+            </button>
+            
+            <video id="videoElement" width="100%" height="100%" controls autoplay>
+                <source id="videoSource" src="" type="application/x-mpegURL">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </div>
+
+    <div class="api-status" id="apiStatus">🔄 Connecting...</div>
+    <div class="notification" id="notification"></div>
+
+    <script>
+        const CONFIG = {
+            API_BASE: 'https://streamed.pk/api',
+            CORS_PROXY: 'https://api.allorigins.win/raw?url=',
+            RETRY_ATTEMPTS: 3,
+            RETRY_DELAY: 2000,
+            AUTO_REFRESH: 300000
+        };
+
+        let currentSport = 'football';
+        let matches = [];
+        let apiConnected = false;
+        let currentMatch = null; // Store current match for stream switching
+        let currentStreamIndex = 0; // Track which stream is playing
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('=== DOM Content Loaded ===');
+            initializeApp();
+            setupEventListeners();
+            updateLocalTimeDisplay();
+            
+            // Update time display every minute
+            setInterval(updateLocalTimeDisplay, 60000);
+            
+            // Debug: Log all nav items
+            const navItems = document.querySelectorAll('.nav-item');
+            console.log('Found nav items:', navItems.length);
+            navItems.forEach((item, index) => {
+                console.log(`Nav ${index}:`, item.textContent, 'section:', item.dataset.section);
+            });
+        });
+
+        function updateLocalTimeDisplay() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString(undefined, {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            const timezoneStr = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            
+            const indicator = document.getElementById('liveIndicatorText');
+            if (indicator) {
+                indicator.innerHTML = `🌍 Live Sports Worldwide • <span style="font-size: 0.9em; opacity: 0.8;">Your Time: ${timeStr} (${timezoneStr})</span>`;
+            }
+        }
+
+        async function initializeApp() {
+            showNotification('🚀 Loading KyloLive SportsTV...');
+            await loadMatches();
+        }
+
+        async function loadMatches() {
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('matchesContainer');
+            const matchCount = document.getElementById('matchCount');
+            
+            try {
+                loading.style.display = 'flex';
+                container.innerHTML = '';
+                
+                const url = `${CONFIG.CORS_PROXY}${encodeURIComponent(CONFIG.API_BASE + '/matches/' + currentSport)}`;
+                console.log('=== Loading Matches ===');
+                console.log('Sport:', currentSport);
+                console.log('API URL:', url);
+                
+                const response = await fetchWithRetry(url);
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('=== Raw API Response ===');
+                console.log(data);
+                console.log('Response type:', typeof data);
+                console.log('Is array:', Array.isArray(data));
+                
+                matches = parseApiResponse(data);
+                console.log('=== Parsed Matches ===');
+                console.log('Match count:', matches.length);
+                console.log('First match:', matches[0]);
+                
+                if (matches.length === 0) {
+                    throw new Error(`No valid ${currentSport} matches available right now`);
+                }
+                
+                apiConnected = true;
+                updateApiStatus('connected');
+                showNotification(`✅ Found ${matches.length} ${currentSport} matches!`);
+                
+                displayMatches(matches);
+                matchCount.textContent = `(${matches.length} matches)`;
+            } catch (error) {
+                console.error('=== Error Loading Matches ===');
+                console.error(error);
+                apiConnected = false;
+                updateApiStatus('error');
+                container.innerHTML = `
+                    <div class="error-message">
+                        ❌ Unable to load ${currentSport} matches
+                        <br><br><strong>Error:</strong> ${error.message}
+                        <br><br><small>Check browser console (F12) for details</small>
+                        <br><br>
+                        <button class="watch-button" onclick="loadMatches()">🔄 Retry</button>
+                        <button class="watch-button" onclick="testAPI()" style="margin-left: 10px;">🔍 Test API</button>
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Add API test function
+        async function testAPI() {
+            console.log('=== Testing API Connection ===');
+            showNotification('🔍 Testing API...');
+            
+            try {
+                // Test without CORS proxy first
+                const directUrl = `${CONFIG.API_BASE}/matches/football`;
+                console.log('Testing direct URL:', directUrl);
+                
+                const directResponse = await fetch(directUrl);
+                console.log('Direct response status:', directResponse.status);
+                console.log('Direct response headers:', [...directResponse.headers.entries()]);
+                
+                if (directResponse.ok) {
+                    const data = await directResponse.json();
+                    console.log('Direct API works! Data:', data);
+                    showNotification('✅ Direct API works! Updating config...');
+                    CONFIG.CORS_PROXY = ''; // Remove proxy
+                    loadMatches();
+                    return;
+                }
+            } catch (e) {
+                console.log('Direct API failed (CORS issue):', e.message);
+            }
+            
+            // Test with CORS proxy
+            try {
+                const proxyUrl = `${CONFIG.CORS_PROXY}${encodeURIComponent(CONFIG.API_BASE + '/matches/football')}`;
+                console.log('Testing proxy URL:', proxyUrl);
+                
+                const proxyResponse = await fetch(proxyUrl);
+                console.log('Proxy response status:', proxyResponse.status);
+                
+                if (proxyResponse.ok) {
+                    const data = await proxyResponse.json();
+                    console.log('Proxy API works! Data:', data);
+                    showNotification('✅ Proxy API works!');
+                    loadMatches();
+                } else {
+                    throw new Error(`Proxy returned ${proxyResponse.status}`);
+                }
+            } catch (e) {
+                console.error('Proxy API failed:', e);
+                showNotification('❌ Both direct and proxy API failed');
+            }
+        }
+
+        async function fetchWithRetry(url, attempts = CONFIG.RETRY_ATTEMPTS) {
+            for (let i = 0; i < attempts; i++) {
+                try {
+                    const timeout = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Timeout')), 15000)
+                    );
+                    const response = await Promise.race([fetch(url), timeout]);
+                    return response;
+                } catch (error) {
+                    if (i === attempts - 1) throw error;
+                    await new Promise(r => setTimeout(r, CONFIG.RETRY_DELAY));
+                }
+            }
+        }
+
+        function parseApiResponse(data) {
+            console.log('Parsing API response:', data);
+            
+            const arr = Array.isArray(data) ? data : (data.matches || data.data || []);
+            
+            const parsedMatches = arr.map((m, i) => {
+                // Extract team names from title if available (format: "Team A vs Team B")
+                let team1 = null;
+                let team2 = null;
+                
+                // First try to parse from title
+                if (m.title) {
+                    if (m.title.includes(' vs ')) {
+                        const teams = m.title.split(' vs ');
+                        team1 = teams[0].trim();
+                        team2 = teams[1].trim();
+                    } else if (m.title.includes(' v ')) {
+                        const teams = m.title.split(' v ');
+                        team1 = teams[0].trim();
+                        team2 = teams[1].trim();
+                    } else if (m.title.includes(' - ')) {
+                        const teams = m.title.split(' - ');
+                        team1 = teams[0].trim();
+                        team2 = teams[1].trim();
+                    }
+                }
+                
+                // Fallback to direct field names
+                if (!team1) team1 = m.home_team || m.team1 || m.homeTeam || m.home || null;
+                if (!team2) team2 = m.away_team || m.team2 || m.awayTeam || m.away || null;
+                
+                // If still no teams, skip this match
+                if (!team1 || !team2 || team1 === 'Team A' || team2 === 'Team B') {
+                    console.log('Skipping match with invalid team names:', m);
+                    return null;
+                }
+                
+                // Extract sport/category from the match data
+                const matchSport = (m.sport || m.category || m.type || '').toLowerCase();
+                
+                // Parse date and time
+                const dateTimeInfo = parseMatchDateTime(m);
+                
+                return {
+                    id: m.id || m._id || `match_${i}`,
+                    title: m.title || `${team1} vs ${team2}`,
+                    league: m.league || m.competition || m.tournament || 'Live Sports',
+                    team1: team1,
+                    team2: team2,
+                    sport: matchSport || currentSport,
+                    isLive: m.status === 'live' || m.is_live || m.live || dateTimeInfo.isLive,
+                    time: dateTimeInfo.displayTime,
+                    date: dateTimeInfo.displayDate,
+                    fullDateTime: dateTimeInfo.fullDateTime,
+                    timestamp: dateTimeInfo.timestamp,
+                    score: m.score || null,
+                    sources: (m.sources || m.streams || []).map(s => ({
+                        source: s.source || s.name || s.provider || 'Stream',
+                        id: s.id || s.source_id || Math.random().toString(36),
+                        url: s.url || s.link || s.stream_url || null,
+                        quality: s.quality || s.resolution || 'HD',
+                        lang: s.language || s.lang || 'EN'
+                    }))
+                };
+            });
+            
+            // Filter out null entries and matches without sources
+            const validMatches = parsedMatches.filter(m => {
+                if (!m) return false;
+                if (!m.sources || m.sources.length === 0) {
+                    console.log('Skipping match without sources:', m.title);
+                    return false;
+                }
+                
+                // Filter by current sport
+                const matchSportLower = (m.sport || '').toLowerCase();
+                const currentSportLower = currentSport.toLowerCase();
+                
+                const sportMatches = 
+                    matchSportLower === currentSportLower ||
+                    matchSportLower.includes(currentSportLower) ||
+                    currentSportLower.includes(matchSportLower) ||
+                    !matchSportLower;
+                
+                if (!sportMatches) {
+                    console.log(`Filtering out ${matchSportLower} match (looking for ${currentSportLower}):`, m.title);
+                }
+                
+                return sportMatches;
+            });
+            
+            // Sort matches: Live first, Starting Soon second, then by date/time, hide ended matches
+            validMatches.sort((a, b) => {
+                // Priority 1: Live matches first
+                if (a.isLive && !b.isLive) return -1;
+                if (!a.isLive && b.isLive) return 1;
+                
+                // Priority 2: If both live or both not live, sort by timestamp
+                if (a.timestamp && b.timestamp) {
+                    return a.timestamp - b.timestamp;
+                }
+                
+                // Priority 3: Matches with timestamps before those without
+                if (a.timestamp && !b.timestamp) return -1;
+                if (!a.timestamp && b.timestamp) return 1;
+                
+                return 0;
+            });
+            
+            // Filter out ended matches (optional - comment out if you want to keep them)
+            const activeMatches = validMatches.filter(m => m.liveStatus !== 'ended');
+            
+            console.log(`Filtered ${activeMatches.length} active matches (${validMatches.filter(m => m.isLive).length} live) from ${arr.length} total`);
+            return activeMatches;
+        }
+
+        // Parse and format match date/time with timezone conversion
+        function parseMatchDateTime(match) {
+            const now = new Date();
+            
+            // Check if match is explicitly marked as live
+            const explicitlyLive = match.status === 'live' || match.is_live || match.live;
+            
+            // Try to parse date/time from various fields
+            let dateTime = null;
+            const timeField = match.start_time || match.time || match.date || match.kickoff || match.datetime;
+            
+            if (timeField) {
+                // Try parsing as ISO date
+                dateTime = new Date(timeField);
+                
+                // If invalid, try parsing timestamp
+                if (isNaN(dateTime.getTime()) && typeof timeField === 'number') {
+                    dateTime = new Date(timeField * 1000); // Assume Unix timestamp
+                }
+                
+                // If still invalid, try parsing common formats
+                if (isNaN(dateTime.getTime()) && typeof timeField === 'string') {
+                    const formats = [
+                        timeField,
+                        timeField.replace(' ', 'T'),
+                        timeField + 'Z'
+                    ];
+                    
+                    for (const format of formats) {
+                        dateTime = new Date(format);
+                        if (!isNaN(dateTime.getTime())) break;
+                    }
+                }
+            }
+            
+            // Determine if match should be considered "live" based on timing
+            let isLive = explicitlyLive;
+            let liveStatus = 'scheduled'; // scheduled, live, ended
+            
+            if (dateTime && !isNaN(dateTime.getTime())) {
+                const timeDiff = now - dateTime; // milliseconds
+                const oneHour = 60 * 60 * 1000;
+                const threeHours = 3 * oneHour;
+                
+                // If match started within the last hour and less than 3 hours ago, consider it live
+                if (timeDiff >= 0 && timeDiff <= threeHours) {
+                    isLive = true;
+                    liveStatus = 'live';
+                } else if (timeDiff > threeHours) {
+                    liveStatus = 'ended';
+                } else if (timeDiff > -oneHour) {
+                    // Match starts within next hour - show as "Starting Soon"
+                    liveStatus = 'starting-soon';
+                }
+            }
+            
+            // If explicitly marked as live, override timing
+            if (explicitlyLive) {
+                isLive = true;
+                liveStatus = 'live';
+            }
+            
+            // If match is live, return live status
+            if (isLive) {
+                return {
+                    isLive: true,
+                    liveStatus: liveStatus,
+                    displayTime: 'LIVE',
+                    displayDate: 'Now',
+                    fullDateTime: 'Live Now',
+                    timestamp: now.getTime(),
+                    scheduledTime: dateTime
+                };
+            }
+            
+            // If we have a valid date
+            if (dateTime && !isNaN(dateTime.getTime())) {
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                // Format time (user's local timezone)
+                const timeStr = dateTime.toLocaleTimeString(undefined, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                
+                // Format date
+                let dateStr;
+                if (isSameDay(dateTime, today)) {
+                    dateStr = 'Today';
+                } else if (isSameDay(dateTime, tomorrow)) {
+                    dateStr = 'Tomorrow';
+                } else {
+                    dateStr = dateTime.toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                }
+                
+                // Full date time string
+                const fullDateTime = dateTime.toLocaleString(undefined, {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                
+                return {
+                    isLive: false,
+                    liveStatus: liveStatus,
+                    displayTime: timeStr,
+                    displayDate: dateStr,
+                    fullDateTime: fullDateTime,
+                    timestamp: dateTime.getTime(),
+                    scheduledTime: dateTime
+                };
+            }
+            
+            // No valid date/time found
+            return {
+                isLive: false,
+                liveStatus: 'scheduled',
+                displayTime: 'TBD',
+                displayDate: '',
+                fullDateTime: 'Time To Be Determined',
+                timestamp: null,
+                scheduledTime: null
+            };
+        }
+        
+        // Helper function to check if two dates are the same day
+        function isSameDay(date1, date2) {
+            return date1.getFullYear() === date2.getFullYear() &&
+                   date1.getMonth() === date2.getMonth() &&
+                   date1.getDate() === date2.getDate();
+        }
+
+        function displayMatches(matchList) {
+            const container = document.getElementById('matchesContainer');
+            container.innerHTML = '';
+            
+            if (matchList.length === 0) {
+                container.innerHTML = `
+                    <div class="error-message" style="background: rgba(0, 212, 255, 0.1); border-color: rgba(0, 212, 255, 0.3); color: #00d4ff;">
+                        📺 No ${currentSport} matches available right now
+                        <br><br>
+                        <small>Try selecting a different sport or check back later</small>
+                        <br><br>
+                        <button class="watch-button" onclick="loadMatches()">🔄 Refresh</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Count live matches
+            const liveCount = matchList.filter(m => m.isLive).length;
+            
+            matchList.forEach(match => {
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                
+                // Add special styling for live matches
+                if (match.isLive) {
+                    card.style.border = '2px solid #4CAF50';
+                    card.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.3)';
+                }
+                
+                // Format time display based on status
+                let timeDisplay = '';
+                if (match.isLive) {
+                    timeDisplay = `
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                            <div class="match-time" style="background: #4CAF50; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; animation: pulse 2s infinite; box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);">
+                                🔴 LIVE NOW
+                            </div>
+                            ${match.scheduledTime ? `<div style="font-size: 0.7em; color: #888;">Started ${match.scheduledTime.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'})}</div>` : ''}
+                        </div>
+                    `;
+                } else if (match.liveStatus === 'starting-soon') {
+                    timeDisplay = `
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                            <div class="match-time" style="background: #FF9800; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; box-shadow: 0 0 10px rgba(255, 152, 0, 0.3);">
+                                ⏰ Starting Soon
+                            </div>
+                            <div style="font-size: 0.75em; color: #FF9800;">${match.time}</div>
+                        </div>
+                    `;
+                } else if (match.date && match.time !== 'TBD') {
+                    timeDisplay = `
+                        <div class="match-datetime" style="text-align: right;">
+                            <div class="match-date" style="font-size: 0.75em; color: #00d4ff; margin-bottom: 3px;">${match.date}</div>
+                            <div class="match-time" style="color: #4CAF50; font-weight: bold;">${match.time}</div>
+                        </div>
+                    `;
+                } else {
+                    timeDisplay = `<div class="match-time" style="color: #888;">TBD</div>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="match-header">
+                        <div class="match-league">${match.league}</div>
+                        ${timeDisplay}
+                    </div>
+                    <div class="teams">
+                        <div class="team">
+                            <div class="team-logo">🏆</div>
+                            <div class="team-name">${match.team1}</div>
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="team">
+                            <div class="team-logo">🏆</div>
+                            <div class="team-name">${match.team2}</div>
+                        </div>
+                    </div>
+                    ${match.score ? `<div style="text-align: center; font-size: 1.3em; font-weight: bold; color: #4CAF50; margin: 10px 0;">${match.score}</div>` : ''}
+                    ${match.fullDateTime && match.fullDateTime !== 'Live Now' && match.fullDateTime !== 'Time To Be Determined' ? 
+                        `<div style="text-align: center; font-size: 0.8em; color: #888; margin: 5px 0;" title="Your local time">📅 ${match.fullDateTime}</div>` 
+                        : ''}
+                    <div class="match-info">
+                        <div class="stream-quality">
+                            ${match.sources.slice(0, 3).map(s => `<span class="quality-badge">${s.quality} ${s.lang}</span>`).join('')}
+                            ${match.sources.length > 3 ? `<span class="quality-badge">+${match.sources.length - 3} more</span>` : ''}
+                        </div>
+                        <button class="watch-button" onclick="playMatch('${match.id}')" style="${match.isLive ? 'background: linear-gradient(45deg, #4CAF50, #45a049); box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);' : ''}">
+                            ${match.isLive ? '🔴 Watch Live' : match.liveStatus === 'starting-soon' ? '⏰ Watch' : '▶️ Watch'}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            console.log(`Displayed ${matchList.length} matches for ${currentSport} (${liveCount} live)`);
+            
+            // Show live count notification
+            if (liveCount > 0) {
+                showNotification(`🔴 ${liveCount} live ${currentSport} match${liveCount > 1 ? 'es' : ''} now!`, 5000);
+            }
+        }
+
+        async function playMatch(matchId, sourceIndex = 0) {
+            const match = matches.find(m => m.id === matchId);
+            
+            console.log('=== Playing Match ===');
+            console.log('Match ID:', matchId);
+            console.log('Source Index:', sourceIndex);
+            console.log('Match data:', match);
+            
+            if (!match) {
+                showNotification('❌ Match not found');
+                return;
+            }
+            
+            if (!match.sources || match.sources.length === 0) {
+                console.error('No sources available for match');
+                showNotification('❌ No streams available for this match');
+                return;
+            }
+            
+            console.log('Available sources:', match.sources);
+            
+            // Store current match and source index
+            currentMatch = match;
+            currentStreamIndex = sourceIndex;
+            
+            // Show stream selector if multiple sources available
+            if (match.sources.length > 1) {
+                displayStreamSelector(match);
+            }
+            
+            try {
+                showNotification(`🔄 Loading stream ${sourceIndex + 1}/${match.sources.length}...`);
+                
+                // Try to get stream URL for selected source
+                const streamUrl = await getStreamUrl(match.sources[sourceIndex]);
+                
+                console.log('Final stream URL:', streamUrl);
+                
+                if (streamUrl) {
+                    openVideoPlayer(streamUrl, `${match.team1} vs ${match.team2}`);
+                } else {
+                    // If this source fails and there are more sources, try next one
+                    if (sourceIndex < match.sources.length - 1) {
+                        showNotification(`⚠️ Source failed, trying alternative...`);
+                        setTimeout(() => playMatch(matchId, sourceIndex + 1), 1000);
+                    } else {
+                        throw new Error('All stream sources failed');
+                    }
+                }
+            } catch (error) {
+                console.error('Error playing match:', error);
+                showNotification('❌ Unable to load stream: ' + error.message);
+            }
+        }
+        
+        // Display stream source selector
+        function displayStreamSelector(match) {
+            const selector = document.getElementById('streamSelector');
+            const sourcesList = document.getElementById('streamSourcesList');
+            const toggleBtn = document.getElementById('toggleStreamBtn');
+            
+            sourcesList.innerHTML = '';
+            
+            match.sources.forEach((source, index) => {
+                const sourceBtn = document.createElement('button');
+                sourceBtn.className = 'stream-source-btn';
+                sourceBtn.style.cssText = `
+                    width: 100%;
+                    padding: 12px;
+                    background: ${index === currentStreamIndex ? 'linear-gradient(45deg, #00d4ff, #0099cc)' : 'rgba(0, 212, 255, 0.2)'};
+                    border: 2px solid ${index === currentStreamIndex ? '#00d4ff' : 'rgba(0, 212, 255, 0.3)'};
+                    border-radius: 8px;
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    text-align: left;
+                    font-size: 0.9em;
+                `;
+                
+                sourceBtn.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 4px;">
+                        ${index === currentStreamIndex ? '▶️ ' : ''}${source.source || `Source ${index + 1}`}
+                    </div>
+                    <div style="font-size: 0.85em; opacity: 0.8;">
+                        ${source.quality} • ${source.lang}
+                    </div>
+                `;
+                
+                sourceBtn.onmouseover = () => {
+                    if (index !== currentStreamIndex) {
+                        sourceBtn.style.background = 'rgba(0, 212, 255, 0.3)';
+                        sourceBtn.style.borderColor = '#00d4ff';
+                    }
+                };
+                
+                sourceBtn.onmouseout = () => {
+                    if (index !== currentStreamIndex) {
+                        sourceBtn.style.background = 'rgba(0, 212, 255, 0.2)';
+                        sourceBtn.style.borderColor = 'rgba(0, 212, 255, 0.3)';
+                    }
+                };
+                
+                sourceBtn.onclick = () => {
+                    if (index !== currentStreamIndex) {
+                        playMatch(match.id, index);
+                        toggleStreamSelector();
+                    }
+                };
+                
+                sourcesList.appendChild(sourceBtn);
+            });
+            
+            // Show the toggle button
+            toggleBtn.style.display = 'block';
+            toggleBtn.textContent = `📡 Source ${currentStreamIndex + 1}/${match.sources.length}`;
+        }
+        
+        // Toggle stream selector visibility
+        function toggleStreamSelector() {
+            const selector = document.getElementById('streamSelector');
+            if (selector.style.display === 'none' || !selector.style.display) {
+                selector.style.display = 'block';
+            } else {
+                selector.style.display = 'none';
+            }
+        }
+
+        async function getStreamUrl(source) {
+            console.log('Getting stream URL for:', source);
+            
+            // If we already have a direct URL
+            if (source.url && source.url.startsWith('http')) {
+                console.log('Using direct URL:', source.url);
+                return source.url;
+            }
+            
+            try {
+                // Call the streams API endpoint with source and id
+                const url = `${CONFIG.CORS_PROXY}${encodeURIComponent(CONFIG.API_BASE + '/stream/' + source.source + '/' + source.id)}`;
+                console.log('Fetching stream from:', url);
+                
+                const response = await fetchWithRetry(url);
+                if (!response.ok) {
+                    throw new Error(`Stream API returned ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Stream API response:', data);
+                
+                // The API returns an array of streams
+                if (Array.isArray(data) && data.length > 0) {
+                    const stream = data[0]; // Get first stream
+                    const embedUrl = stream.embedUrl || stream.embed_url || stream.url || stream.link;
+                    
+                    if (embedUrl) {
+                        console.log('Found embed URL:', embedUrl);
+                        return embedUrl;
+                    }
+                }
+                
+                // Try other response formats
+                const streamUrl = data.url || 
+                                data.stream_url || 
+                                data.link || 
+                                data.src ||
+                                data.embedUrl ||
+                                (data.streams && data.streams[0] && data.streams[0].embedUrl);
+                
+                if (!streamUrl) {
+                    throw new Error('No stream URL in response');
+                }
+                
+                console.log('Resolved stream URL:', streamUrl);
+                return streamUrl;
+                
+            } catch (error) {
+                console.error('Error getting stream URL:', error);
+                showNotification(`❌ Stream error: ${error.message}`);
+                return null;
+            }
+        }
+
+        function openVideoPlayer(url, title) {
+            console.log('=== Opening Video Player ===');
+            console.log('Stream URL:', url);
+            console.log('Title:', title);
+            
+            const player = document.getElementById('videoPlayer');
+            const video = document.getElementById('videoElement');
+            const source = document.getElementById('videoSource');
+            
+            // Stop any existing playback
+            video.pause();
+            video.src = '';
+            
+            // Check if URL is an embed URL (contains iframe)
+            if (url.includes('embed') || url.includes('iframe')) {
+                console.log('URL appears to be an embed link, creating iframe player');
+                
+                // Replace video element with iframe
+                const container = video.parentElement;
+                video.style.display = 'none';
+                
+                let iframe = container.querySelector('iframe');
+                if (!iframe) {
+                    iframe = document.createElement('iframe');
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.style.border = 'none';
+                    iframe.allow = 'autoplay; fullscreen; encrypted-media';
+                    iframe.allowFullscreen = true;
+                    container.insertBefore(iframe, container.firstChild);
+                }
+                
+                iframe.src = url;
+                player.style.display = 'flex';
+                showNotification('✅ Loading embed stream...');
+                return;
+            }
+            
+            // Show video element, hide iframe if exists
+            video.style.display = 'block';
+            const iframe = video.parentElement.querySelector('iframe');
+            if (iframe) {
+                iframe.style.display = 'none';
+            }
+            
+            // Determine stream type
+            let mimeType = 'application/x-mpegURL'; // HLS default
+            
+            if (url.includes('.mpd')) {
+                mimeType = 'application/dash+xml';
+                console.log('Detected DASH stream');
+            } else if (url.includes('.m3u8')) {
+                mimeType = 'application/x-mpegURL';
+                console.log('Detected HLS stream');
+            } else if (url.includes('.mp4')) {
+                mimeType = 'video/mp4';
+                console.log('Detected MP4 stream');
+            }
+            
+            // Try direct video src first
+            video.src = url;
+            source.src = url;
+            source.type = mimeType;
+            
+            // Show player
+            player.style.display = 'flex';
+            
+            // Try to load and play
+            video.load();
+            
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        console.log('✅ Video playback started successfully');
+                        showNotification('✅ Stream playing!');
+                    })
+                    .catch(error => {
+                        console.error('❌ Playback error:', error);
+                        
+                        // If native playback fails, try HLS.js for HLS streams
+                        if (url.includes('.m3u8') && typeof Hls !== 'undefined') {
+                            console.log('Trying HLS.js fallback...');
+                            loadWithHlsJs(video, url);
+                        } else {
+                            showNotification('❌ Stream format not supported. Try another source.');
+                        }
+                    });
+            }
+            
+            // Add error handler
+            video.onerror = (e) => {
+                console.error('Video error:', e);
+                console.error('Video error code:', video.error ? video.error.code : 'unknown');
+                console.error('Video error message:', video.error ? video.error.message : 'unknown');
+                showNotification('❌ Stream failed to load. Try another source.');
+            };
+            
+            video.onloadedmetadata = () => {
+                console.log('✅ Video metadata loaded');
+            };
+            
+            video.oncanplay = () => {
+                console.log('✅ Video can play');
+            };
+        }
+        
+        // HLS.js fallback function (if library is available)
+        function loadWithHlsJs(video, url) {
+            if (Hls.isSupported()) {
+                const hls = new Hls({
+                    debug: true,
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                });
+                
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    console.log('✅ HLS manifest parsed');
+                    video.play()
+                        .then(() => showNotification('✅ HLS stream playing!'))
+                        .catch(e => console.error('HLS play error:', e));
+                });
+                
+                hls.on(Hls.Events.ERROR, (event, data) => {
+                    console.error('HLS error:', data);
+                    if (data.fatal) {
+                        showNotification('❌ Fatal HLS error');
+                    }
+                });
+                
+                window.currentHls = hls;
+            }
+        }
+
+        function closePlayer() {
+            const player = document.getElementById('videoPlayer');
+            const video = document.getElementById('videoElement');
+            const iframe = video.parentElement.querySelector('iframe');
+            const selector = document.getElementById('streamSelector');
+            const toggleBtn = document.getElementById('toggleStreamBtn');
+            
+            // Clean up video
+            video.pause();
+            video.src = '';
+            video.load();
+            
+            // Clean up iframe
+            if (iframe) {
+                iframe.src = 'about:blank';
+                iframe.style.display = 'none';
+            }
+            
+            // Clean up HLS.js if exists
+            if (window.currentHls) {
+                window.currentHls.destroy();
+                window.currentHls = null;
+            }
+            
+            // Hide stream selector
+            selector.style.display = 'none';
+            toggleBtn.style.display = 'none';
+            
+            // Reset current match
+            currentMatch = null;
+            currentStreamIndex = 0;
+            
+            player.style.display = 'none';
+            showNotification('⏹️ Player closed');
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.sport-tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    document.querySelectorAll('.sport-tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentSport = e.target.dataset.sport;
+                    loadMatches();
+                });
+            });
+            
+            setInterval(() => {
+                if (apiConnected && document.getElementById('videoPlayer').style.display !== 'flex') {
+                    loadMatches();
+                }
+            }, CONFIG.AUTO_REFRESH);
+        }
+
+        function updateApiStatus(status) {
+            const el = document.getElementById('apiStatus');
+            el.className = `api-status ${status}`;
+            el.textContent = status === 'connected' ? '✅ Connected' : '❌ Disconnected';
+        }
+
+        function showNotification(message, duration = 3000) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.classList.add('show');
+            setTimeout(() => notif.classList.remove('show'), duration);
+        }
+    </script>
+</body>
+</html>

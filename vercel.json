@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "kylolivev10",
+      "src": "kylolivev10.html",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/kylolivev10"
+      "dest": "/kylolivev10.html"
     }
   ]
 }

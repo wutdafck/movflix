@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "indexmf.html",
+      "src": "kylolivev10.html",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/indexmf.html"
+      "dest": "/kylolivev10.html"
     }
   ]
 }
